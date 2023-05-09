@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "sd-sdk-utils"
+version = "0.1.0"
+description = "Utility scripts using the Sound Designer SDK"
+authors = ["Mark Melvin <mark.melvin@onsemi.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "sd_sdk_utils"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+sd-sdk-python = "^0.2.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

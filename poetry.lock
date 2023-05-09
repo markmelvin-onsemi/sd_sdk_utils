@@ -1,0 +1,18 @@
+[[package]]
+name = "sd-sdk-python"
+version = "0.2.0"
+description = "Python helper module for the Sound Designer SDK"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.7"
+content-hash = "247eca01edd553e02fbca5bce7e23792f77101b60fa00d8754468b6b8249180a"
+
+[metadata.files]
+sd-sdk-python = [
+    {file = "sd_sdk_python-0.2.0-py3-none-any.whl", hash = "sha256:2862c600d4b52111437b87dd2b768c9e4f45e8da9a94e710567443f0a10c86eb"},
+    {file = "sd_sdk_python-0.2.0.tar.gz", hash = "sha256:d3a28681e3b14511e80b24f23967009368833e30b984c1f074c23468d9f2a5a6"},
+]
