@@ -13,7 +13,7 @@ class Ear(IntEnum):
 
 def connect_and_configure_device(communication_interface, product, product_name, upgrade_firmware=False):
     from sd_sdk_python import sd
-    from sd_sdk_python.sd_sdk import Ezairo, DeviceInfo
+    from sd_sdk_python.sd_sdk import Ezairo
 
     device_info = communication_interface.DetectDevice()
     assert device_info is not None and device_info.IsValid
@@ -46,7 +46,7 @@ def connect_and_configure_device(communication_interface, product, product_name,
 
     assert device_info.LibraryId == product.Definition.LibraryId
     assert device_info.ProductId == product.Definition.ProductId
-    return Ezairo(sd, communication_interface, DeviceInfo(device_info), product)
+    return Ezairo(sd, communication_interface, device_info, product)
 
 
 def create_communication_interface(programmer, side, interface_options=None, verify_nvm_writes=False):
