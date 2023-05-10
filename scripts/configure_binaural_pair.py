@@ -1,121 +1,14 @@
-import argparse
 from pathlib import Path
 import os
-from enum import Enum
+import json
+import time
 
-
-class Role(Enum):
-    CENTRAL = 0
-    PERIPHERAL = 1
-
-
-def set_sdk_root(value):
-    path_value = Path(value)
-    if not path_value.exists() or not path_value.is_dir():
-        raise ValueError(f"{value} is not a valid path")
-
-    os.environ['SD_SDK_ROOT'] = str(path_value)
-
-    return path_value
-
-def validate_file(value):
-    path_value = Path(value)
-    if not path_value.exists() or not path_value.is_file():
-        raise ValueError(f"{value} is not a valid file path")
-
-    return path_value
-
-def get_side(value):
-    side = value.upper()
-    if side == 'LEFT':
-        return 0 # sd.kLeft
-    if side == 'RIGHT':
-        return 1 # sd.kRight
-
-    raise ValueError(f"Unknown side: {value}")
-
-def get_programmer(value):
-    programmer = value.upper()
-    if programmer == 'CAA':
-        return 'Communication Accelerator Adaptor'
-    elif programmer == 'DSP3':
-        return 'DSP3'
-    elif programmer == 'PROMIRA':
-        return 'Promira'
-
-    raise ValueError(f"Unknown programmer: {programmer}")
-
-
-def parse_command_line_arguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--sdk-root",
-        action="store",
-        default=None,
-        help="Path to the Sound Designer SDK root folder (or set 'SD_SDK_ROOT' in your environment)",
-        type=set_sdk_root,
-    )
-    parser.add_argument(
-        "--param-file",
-        action="store",
-        default=None,
-        help="Path to the base .param file used to program the devices",
-        type=validate_file,
-    )
-    parser.add_argument(
-        "--programmer",
-        action="store",
-        default="CAA",
-        help="Specify which programmer to use (one of ['CAA', 'DSP3', 'Promira'])",
-        choices=("CAA", "DSP3", "Promira"),
-        type=get_programmer,
-    )
-    parser.add_argument(
-        "--side",
-        action="store",
-        default="left",
-        help="Specify which side to use (one of ['left', 'right'])",
-        choices=("left", "right"),
-        type=get_side,
-    )
-    parser.add_argument(
-        "--interface-options",
-        action="store",
-        default=None,
-        help="Options to pass to the communication interface",
-    )
-    parser.add_argument(
-        "--product",
-        action="store",
-        default="E7160SL",
-        help="Which product to use (one of ['E7111V2', 'E7160SL'])",
-        choices=('E7111V2', 'E7160SL'),
-    )
-    parser.add_argument(
-        "--verify-nvm-writes", action="store_true", default=False, help="Verify all NVM writes"
-    )
-
-    return parser.parse_args()
-
-
-def connect_device(communication_interface, product, product_name):
-    from sd_sdk_python import sd
-    from sd_sdk_python.sd_sdk import Ezairo, DeviceInfo
-
-    device_info = communication_interface.DetectDevice()
-    assert device_info is not None and device_info.IsValid
-    assert device_info.FirmwareId == product_name
-
-    if not product.InitializeDevice(communication_interface):
-        product.ConfigureDevice()
-
-    assert device_info.LibraryId == product.Definition.LibraryId
-    assert device_info.ProductId == product.Definition.ProductId
-    return Ezairo(sd, communication_interface, DeviceInfo(device_info), product)
+from cmd_line_args import get_command_line_parser, validate_file
+from common import Role, Ear, create_communication_interface, connect_and_configure_device
 
 
 def program_binaural_half(configured_device, param_file : Path, peer_address : int,
-                          central_peripheral : Role, enable_asha=True, enable_mfi=True):
+                          role : Role, enable_asha=True, enable_mfi=True):
     configured_device.interface.MuteDuringCommunication = False
 
     configured_device.mute()
@@ -137,10 +30,20 @@ def program_binaural_half(configured_device, param_file : Path, peer_address : i
                                       write_voice_alerts=True)
 
     # Override the peer address
+    if role == Role.CENTRAL:
+        configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_RoleSelect', Role.CENTRAL.value)
+        configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_FWK_Ear', Ear.LEFT.value)
+    else:
+        configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_RoleSelect', Role.PERIPHERAL.value)
+        configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_FWK_Ear', Ear.RIGHT.value)
+
     configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_BinauralPeerAddress2', peer_address & 0xFFFFFF)
     configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_BinauralPeerAddress1', peer_address >> 24)
+
+    configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_ASHAEnable', 1 if enable_asha else 0)
+    configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_MFiEnable', 1 if enable_asha else 0)
+
     configured_device.burn_all_parameters()
-    configured_device.interface.ClearBondTableOnDevice()
 
     configured_device.unmute()
 
@@ -148,20 +51,147 @@ def program_binaural_half(configured_device, param_file : Path, peer_address : i
     configured_device.reset()
 
 def main():
-    args = parse_command_line_arguments()
+    parser = get_command_line_parser()
+    parser.add_argument(
+        "--upgrade-firmware",
+        action="store_true",
+        default=False, help="Upgrade the firmware on the device if it is not the same"
+    )
+    parser.add_argument(
+        "--param-file",
+        action="store",
+        default=None,
+        help="Path to the base .param file used to program the devices",
+        required=True,
+        type=validate_file,
+    )
+    parser.add_argument(
+        "--library-file",
+        action="store",
+        default=None,
+        help="Path to the .library file to use (if different than the product default)",
+        type=validate_file,
+    )
+    parser.add_argument(
+        "--product-index",
+        action="store",
+        default=0,
+        help="Index of the product in the library file",
+        type=int,
+    )
+    parser.add_argument(
+        "--central-address",
+        action="store",
+        default=None,
+        help="Manually specify the central's MAC address (default is to auto-detect)",
+        type=lambda x: int(x, 0),
+    )
+    parser.add_argument(
+        "--peripheral-address",
+        action="store",
+        default=None,
+        help="Manually specify the peripheral's MAC address (default is to auto-detect)",
+        type=lambda x: int(x, 0),
+    )
+    parser.add_argument(
+        "--asha",
+        action="store",
+        default=False, help="Enable ASHA on the device",
+        type=bool,
+    )
+    parser.add_argument(
+        "--mfi",
+        action="store",
+        default=False, help="Enable MFi on the device",
+        type=bool,
+    )
+    parser.add_argument(
+        "--delete-bonds",
+        action="store_true",
+        default=False, help="When specified, delete the bond table on both devices"
+    )
+
+    args = parser.parse_args()
+
+    interface = create_communication_interface(args.programmer,
+                                               args.side,
+                                               interface_options=args.interface_options,
+                                               verify_nvm_writes=args.verify_nvm_writes)
 
     from sd_sdk_python import get_product_manager
-
     product_manager = get_product_manager()
     sdk_root = Path(os.environ['SD_SDK_ROOT'])
-    library = product_manager.LoadLibraryFromFile(str(sdk_root / f"products/{args.product}.library"))
-    product = library.Products[0].CreateProduct()
+    library_path = str(sdk_root / f"products/{args.product}.library") if args.library_file is None else str(args.library_file)
+    library = product_manager.LoadLibraryFromFile(library_path)
+    product = library.Products[args.product_index].CreateProduct()
 
-    interface = product_manager.CreateCommunicationInterface(args.programmer, args.side, '' if args.interface_options is None else args.interface_options)
-    interface.VerifyNvmWrites = args.verify_nvm_writes
+    # Confirm that the .library referenced in the .param file is the same as the product library specified
+    with args.param_file.open() as fp:
+        param_json = json.load(fp)
+        assert param_json["libraryid"] == product.Definition.LibraryId, "The library ID in the .param file does not match the product library!"
 
-    ezairo = connect_device(interface, product, args.product)
-    print(ezairo.device_info.to_dict())
+    peripheral_address = args.peripheral_address
+    if peripheral_address is None:
+        # Auto-deteect the peripheral address
+        print("Unplug everything except for the desired RIGHT / PERIPHERAL device and press Enter when ready: ", end='')
+        input()
+        peripheral = connect_and_configure_device(interface, product, args.product, upgrade_firmware=args.upgrade_firmware)
+        peripheral_address = int(peripheral.product.DeviceMACAddress, 16)
+        peripheral.product.CloseDevice()
+
+    print(f"Peripheral MAC: {hex(peripheral_address)}")
+
+    print("Unplug everything except for the desired LEFT / CENTRAL device and press Enter when ready: ", end='')
+    input()
+
+    central = connect_and_configure_device(interface, product, args.product, upgrade_firmware=args.upgrade_firmware)
+    central_address = int(central.product.DeviceMACAddress, 16)
+    if args.central_address is not None and central_address != args.central_address:
+        print(f"Warning! The detected central address ({hex(central_address)}) is different than the one specified ({args.central_address})!")
+        print(f"(Used the one specified on the command line: {args.central_address})")
+    print(f"Central MAC: {hex(central_address)}")
+
+    # Program the Central
+    print("Programming the LEFT / CENTRAL device ...")
+    program_binaural_half(central, args.param_file, peripheral_address,
+                          Role.CENTRAL, enable_asha=args.asha, enable_mfi=args.mfi)
+    if args.delete_bonds:
+        print("Waiting for a reboot...")
+        # Wait and then re-connect and delete the bond table
+        time.sleep(5.0)
+        device_info = central.interface.DetectDevice()
+        assert device_info is not None and device_info.IsValid
+        assert product.InitializeDevice(central.interface)
+        central.interface.ClearBondTableOnDevice()
+        print("Deleted the bond table on the central")
+
+    central.product.CloseDevice()
+
+    print("Power off the central and power on the RIGHT / PERIPHERAL device and press Enter when ready: ", end='')
+    input()
+
+    print("Programming the RIGHT / PERIPHERAL device ...")
+    peripheral = connect_and_configure_device(interface, product, args.product, upgrade_firmware=args.upgrade_firmware)
+
+    if args.peripheral_address is not None:
+        peripheral_address = int(peripheral.product.DeviceMACAddress, 16)
+        if args.peripheral_address != peripheral_address:
+            print(f"Warning! The detected peripheral address ({hex(peripheral_address)}) is different than the one specified ({args.peripheral_address})!")
+            print(f"(Used the one specified on the command line: {args.peripheral_address})")
+
+    program_binaural_half(peripheral, args.param_file, central_address,
+                          Role.PERIPHERAL, enable_asha=args.asha, enable_mfi=args.mfi)
+    if args.delete_bonds:
+        print("Waiting for a reboot...")
+        # Wait and then re-connect and delete the bond table
+        time.sleep(5.0)
+        device_info = peripheral.interface.DetectDevice()
+        assert device_info is not None and device_info.IsValid
+        assert product.InitializeDevice(peripheral.interface)
+        peripheral.interface.ClearBondTableOnDevice()
+        print("Deleted the bond table peripheral")
+
+    peripheral.product.CloseDevice()
 
 
 if __name__ == '__main__':

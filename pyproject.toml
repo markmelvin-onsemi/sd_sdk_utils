@@ -5,7 +5,6 @@ description = "Utility scripts using the Sound Designer SDK"
 authors = ["Mark Melvin <mark.melvin@onsemi.com>"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "sd_sdk_utils"}]
 
 [tool.poetry.dependencies]
 python = "^3.7"
