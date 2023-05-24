@@ -1,6 +1,6 @@
 [[package]]
 name = "sd-sdk-python"
-version = "0.2.1"
+version = "0.2.4"
 description = "Python helper module for the Sound Designer SDK"
 category = "main"
 optional = false
@@ -9,10 +9,10 @@ python-versions = ">=3.7,<4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "59d47a023db5ee72ab4e5c7174a060d6c09947a9d4d32cf006df189c6fb6d4df"
+content-hash = "49dc94945499943dab4885c45a2dd8bce74010a579bff5b626bd10477e3fa6c4"
 
 [metadata.files]
 sd-sdk-python = [
-    {file = "sd_sdk_python-0.2.1-py3-none-any.whl", hash = "sha256:0296a75fa287176fb176a83923eba8142580a50c4eb4beb11e35d22c081889c3"},
-    {file = "sd_sdk_python-0.2.1.tar.gz", hash = "sha256:d6690500965f4cd8b4d2d4f46b1eee2dd444624e23d41d0b99e949e76c8625b3"},
+    {file = "sd_sdk_python-0.2.4-py3-none-any.whl", hash = "sha256:7437e8c60e50015d1eee6737dece3251c814c0487b111135b1d16c8405a27cf6"},
+    {file = "sd_sdk_python-0.2.4.tar.gz", hash = "sha256:f9e69f8fdd29b52c91a50d6c130421a6488bd2ad337d76fdd2899b70b7c5e6f7"},
 ]

@@ -3,7 +3,7 @@ import os
 import json
 import time
 
-from cmd_line_args import get_command_line_parser, validate_file
+from cmd_line_args import get_programmer, get_side, get_command_line_parser, validate_file
 from common import Role, Ear, create_communication_interface, connect_and_configure_device
 
 
@@ -41,7 +41,7 @@ def program_binaural_half(configured_device, param_file : Path, peer_address : i
     configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_BinauralPeerAddress1', peer_address >> 24)
 
     configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_ASHAEnable', 1 if enable_asha else 0)
-    configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_MFiEnable', 1 if enable_asha else 0)
+    configured_device.set_parameter_value(configured_device.sd.kSystemNvmMemory, 'X_RF_MFiEnable', 1 if enable_mfi else 0)
 
     configured_device.burn_all_parameters()
 
@@ -113,8 +113,8 @@ def main():
 
     args = parser.parse_args()
 
-    interface = create_communication_interface(args.programmer,
-                                               args.side,
+    interface = create_communication_interface(get_programmer(args.programmer),
+                                               get_side(args.side),
                                                interface_options=args.interface_options,
                                                verify_nvm_writes=args.verify_nvm_writes)
 

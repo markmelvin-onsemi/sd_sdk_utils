@@ -55,7 +55,6 @@ def get_command_line_parser():
         default="CAA",
         help="Specify which programmer to use (one of ['CAA', 'DSP3', 'Promira'])",
         choices=("CAA", "DSP3", "Promira"),
-        type=get_programmer,
     )
     parser.add_argument(
         "--side",
@@ -63,7 +62,6 @@ def get_command_line_parser():
         default="left",
         help="Specify which side to use (one of ['left', 'right'])",
         choices=("left", "right"),
-        type=get_side,
     )
     parser.add_argument(
         "--interface-options",

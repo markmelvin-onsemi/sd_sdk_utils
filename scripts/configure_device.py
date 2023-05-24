@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 import json
 
-from cmd_line_args import get_command_line_parser, validate_file
+from cmd_line_args import get_programmer, get_side, get_command_line_parser, validate_file
 from common import create_communication_interface, connect_and_configure_device
 
 
@@ -38,8 +38,8 @@ def main():
 
     args = parser.parse_args()
 
-    interface = create_communication_interface(args.programmer,
-                                               args.side,
+    interface = create_communication_interface(get_programmer(args.programmer),
+                                               get_side(args.side),
                                                interface_options=args.interface_options,
                                                verify_nvm_writes=args.verify_nvm_writes)
 
