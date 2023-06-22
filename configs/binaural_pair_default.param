@@ -2,7 +2,7 @@
   "library": "Ezairo 7160 SL Demo Library",
   "libraryid": 7160,
   "product": "Ezairo 7160 SL 16 Channels",
-  "librarysignature": "Z3KUSchFMyu2Zi8P335yn45ooUk=",
+  "librarysignature": "0s+C+SR6wxvKbnj98YQkGCW0yQ8=",
   "memory": [
     {
       "id": 0,
@@ -19837,7 +19837,7 @@
       },
       {
         "name": "X_RF_BinauralPeerAddress2",
-        "value": "4445343"
+        "value": "3670085"
       },
       {
         "name": "X_RF_CompanyID",
@@ -19849,31 +19849,31 @@
       },
       {
         "name": "X_RF_DeviceName0",
-        "value": "4744545"
+        "value": "5071218"
       },
       {
         "name": "X_RF_DeviceName1",
-        "value": "7498094"
+        "value": "7022451"
       },
       {
         "name": "X_RF_DeviceName2",
-        "value": "6758465"
+        "value": "2115685"
       },
       {
         "name": "X_RF_DeviceName3",
-        "value": "6906995"
+        "value": "6386281"
       },
       {
         "name": "X_RF_DeviceName4",
-        "value": "0"
+        "value": "7235360"
       },
       {
         "name": "X_RF_DeviceName5",
-        "value": "0"
+        "value": "4286820"
       },
       {
         "name": "X_RF_DeviceName6",
-        "value": "0"
+        "value": "7536640"
       },
       {
         "name": "X_RF_DeviceName7",
@@ -19886,6 +19886,38 @@
       {
         "name": "X_RF_Enable_CoBLE",
         "value": "1"
+      },
+      {
+        "name": "X_RF_GAPDeviceName0",
+        "value": "5071218"
+      },
+      {
+        "name": "X_RF_GAPDeviceName1",
+        "value": "7022451"
+      },
+      {
+        "name": "X_RF_GAPDeviceName2",
+        "value": "2115685"
+      },
+      {
+        "name": "X_RF_GAPDeviceName3",
+        "value": "6386281"
+      },
+      {
+        "name": "X_RF_GAPDeviceName4",
+        "value": "7235360"
+      },
+      {
+        "name": "X_RF_GAPDeviceName5",
+        "value": "4286820"
+      },
+      {
+        "name": "X_RF_GAPDeviceName6",
+        "value": "7536640"
+      },
+      {
+        "name": "X_RF_GAPDeviceName7",
+        "value": "0"
       },
       {
         "name": "X_RF_MFiAuthenticationType",

@@ -5,6 +5,7 @@ import time
 
 from cmd_line_args import get_programmer, get_side, get_command_line_parser, validate_file
 from common import Role, Ear, create_communication_interface, connect_and_configure_device
+import argparse
 
 
 def program_binaural_half(configured_device, param_file : Path, peer_address : int,
@@ -95,15 +96,13 @@ def main():
     )
     parser.add_argument(
         "--asha",
-        action="store",
+        action=argparse.BooleanOptionalAction,
         default=False, help="Enable ASHA on the device",
-        type=bool,
     )
     parser.add_argument(
         "--mfi",
-        action="store",
+        action=argparse.BooleanOptionalAction,
         default=False, help="Enable MFi on the device",
-        type=bool,
     )
     parser.add_argument(
         "--delete-bonds",
