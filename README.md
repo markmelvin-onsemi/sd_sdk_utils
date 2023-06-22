@@ -110,10 +110,10 @@ Here are some example usages:
 
 ### Automatically detect the peer addresses, only enable ASHA, and delete the bond table
 ```
-poetry run python .\scripts\configure_binaural_pair.py --sdk-root=C:\path\to\your\SoundDesignerSDK --param-file=.\configs\binaural_pair_default.param --asha=True --mfi=False --delete-bonds
+poetry run python .\scripts\configure_binaural_pair.py --sdk-root=C:\path\to\your\SoundDesignerSDK --param-file=.\configs\binaural_pair_default.param --asha --no-mfi --delete-bonds
 ```
 
 ### Manually specify both peer addresses, only enable ASHA, delete the bond table, and upgrade the firmware if it is not the same as the provided .library file
 ```
-poetry run python .\scripts\configure_binaural_pair.py --sdk-root=C:\path\to\your\SoundDesignerSDK --upgrade-firmware --param-file=.\configs\binaural_pair_default.param --library-file=C:\path\to\my\E7160SL.library --asha=True --mfi=False --delete-bonds --peripheral-address=0x60c0bf4d7bb8 --central-address=0x60c0bf4d620e
+poetry run python .\scripts\configure_binaural_pair.py --sdk-root=C:\path\to\your\SoundDesignerSDK --upgrade-firmware --param-file=.\configs\binaural_pair_default.param --library-file=C:\path\to\my\E7160SL.library --asha --no-mfi --delete-bonds --peripheral-address=0x60c0bf4d7bb8 --central-address=0x60c0bf4d620e
 ```
